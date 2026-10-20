@@ -1196,6 +1196,16 @@ export class EntityCustomizableCard extends HTMLElement {
     }
 
     // Plain states (on, unavailable, timestamps, ...) are translated/formatted by Home Assistant.
+    if (!this.config.attribute) {
+      // Numeric sensors (with a unit) show a placeholder instead of "unavailable"/"unknown".
+      if (
+        stateObj.attributes?.unit_of_measurement &&
+        (raw === "unavailable" || raw === "unknown")
+      ) {
+        return "--";
+      }
+    }
+
     if (!this.config.attribute && typeof this._hass?.formatEntityState === "function") {
       try {
         return this._hass.formatEntityState(stateObj) || String(raw);

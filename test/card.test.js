@@ -74,9 +74,20 @@ test("temperature attributes use the HA unit system", () => {
 test("plain states go through hass.formatEntityState; unit is hidden for them", () => {
   const { el, q, close } = setup();
   el.setConfig({ entity: "sensor.t" });
-  el.hass = hassWith("unavailable", {}, { formatEntityState: () => "Nedostupné" });
+  el.hass = hassWith("unavailable", { unit_of_measurement: null }, { formatEntityState: () => "Nedostupné" });
   assert.equal(q(".ecc-value").textContent, "Nedostupné");
   assert.ok(q(".ecc-unit").classList.contains("ecc-hidden"));
+  close();
+});
+
+test("unavailable/unknown sensors with a unit show a placeholder", () => {
+  const { el, q, close } = setup();
+  el.setConfig({ entity: "sensor.t" });
+  for (const state of ["unavailable", "unknown"]) {
+    el.hass = hassWith(state, { unit_of_measurement: "°C" }, { formatEntityState: () => "Nedostupné" });
+    assert.equal(q(".ecc-value").textContent, "--");
+    assert.ok(q(".ecc-unit").classList.contains("ecc-hidden"));
+  }
   close();
 });
 
