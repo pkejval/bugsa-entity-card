@@ -1,0 +1,17 @@
+{
+  "name": "bugsa-entity-card",
+  "version": "1.1.0",
+  "description": "Customizable entity card for Home Assistant Lovelace",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "esbuild src/index.js --bundle --format=iife --minify --target=es2020 --legal-comments=none --outfile=dist/bugsa-entity-card.js",
+    "build:dev": "esbuild src/index.js --bundle --format=iife --target=es2020 --outfile=.build/bugsa-entity-card.js",
+    "test": "npm run build:dev && node --test \"test/*.test.js\""
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "jsdom": "^24.1.0"
+  }
+}

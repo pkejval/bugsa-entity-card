@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Bugsa Entity Card - demo</title>
+<style>
+  :root {
+    --primary-text-color: #e1e1e1;
+    --secondary-text-color: #9b9b9b;
+    --primary-color: #03a9f4;
+    --primary-background-color: #111318;
+    --error-color: #db4437;
+  }
+  body { margin: 0; padding: 24px; background: #111318; font-family: Roboto, "Segoe UI", sans-serif; }
+  .grid { display: grid; grid-template-columns: repeat(3, 280px); gap: 16px; }
+  .cell { height: 140px; }
+  ha-card { display: block; background: #1c1c1c; border-radius: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.4); color: var(--primary-text-color); }
+  ha-state-icon { display: inline-block; font-size: var(--mdc-icon-size, 24px); line-height: 1; }
+</style>
+</head>
+<body>
+<div class="grid" id="grid"></div>
+<script>
+  // Stand-in for Home Assistant's icon element (the real card uses <ha-state-icon>).
+  const GLYPHS = { temperature: "🌡", humidity: "💧", battery: "🔋", door: "🚪", power: "⚡", motion: "🏃" };
+  customElements.define("ha-state-icon", class extends HTMLElement {
+    set stateObj(v) { this._s = v; this._draw(); }
+    set icon(v) { this._i = v; this._draw(); }
+    _draw() {
+      const key = this._s?.attributes?.device_class || (this._i || "").split(":").pop();
+      this.textContent = GLYPHS[key] || "●";
+    }
+  });
+</script>
+<script src="../dist/bugsa-entity-card.js"></script>
+<script>
+  const mk = (state, attrs) => ({ state, attributes: attrs });
+  const states = {
+    "sensor.temp": mk("21.4", { unit_of_measurement: "°C", friendly_name: "Living room", device_class: "temperature" }),
+    "sensor.hot": mk("31.8", { unit_of_measurement: "°C", friendly_name: "Attic", device_class: "temperature" }),
+    "sensor.humidity": mk("58", { unit_of_measurement: "%", friendly_name: "Humidity", device_class: "humidity" }),
+    "sensor.battery": mk("14", { unit_of_measurement: "%", friendly_name: "Door sensor battery", device_class: "battery" }),
+    "binary_sensor.door": mk("on", { friendly_name: "Front door", device_class: "door" }),
+    "sensor.power": mk("1234.5", { unit_of_measurement: "W", friendly_name: "Power consumption of the whole house", device_class: "power" }),
+  };
+  const hass = {
+    states, locale: { language: "en" }, themes: {}, config: { unit_system: { temperature: "°C" } },
+    formatEntityState: (s) => ({ on: "Open", off: "Closed" }[s.state] || s.state),
+  };
+  const cards = [
+    { entity: "sensor.temp", value_font_size_value: 36 },
+    { entity: "sensor.hot", value_font_size_value: 36, rules: [
+      { operator: ">", value: 30, color: [255, 110, 64] }, { operator: "<", value: 15, color: [64, 160, 255] } ] },
+    { entity: "sensor.humidity", progress_enabled: true, progress_color: [3, 169, 244], progress_thickness_value: 22, progress_thickness_unit: "px" },
+    { entity: "sensor.battery", progress_enabled: true, progress_thickness_value: 22, progress_thickness_unit: "px",
+      rules: [{ operator: "<", value: 20, color: [255, 82, 82], progress_color: [255, 82, 82] }] },
+    { entity: "binary_sensor.door", state_color: true, rules: [{ operator: "=", value: "on", color: [255, 193, 7] }] },
+    { entity: "sensor.power", value_overflow_mode: "shrink", title_overflow_mode: "shrink", value_position: "bottom_left", icon_position: "top_right" },
+  ];
+  const grid = document.getElementById("grid");
+  for (const config of cards) {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    const el = document.createElement("entity-customizable-card");
+    el.setConfig(config);
+    el.hass = hass;
+    cell.appendChild(el);
+    grid.appendChild(cell);
+  }
+</script>
+</body>
+</html>
